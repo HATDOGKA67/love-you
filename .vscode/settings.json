@@ -1,0 +1,5 @@
+{
+  "livePreview.defaultPreviewPath": "/index.html",
+  "livePreview.openPreviewToSide": true,
+  "livePreview.autoRefreshPreview": true
+}

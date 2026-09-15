@@ -25,7 +25,7 @@
       display: grid;
       grid-template-rows: 38px 30px 1fr 28px;
       width: min(780px, 88vw);
-      height: min(700px, 82vh);
+      height: min(700px, 82dvh);
       min-height: 380px;
       overflow: hidden;
       border: 1px solid #465163;
@@ -80,28 +80,17 @@
       letter-spacing: .06em;
     }
     .status-error { color: #ff526f; }
-    .sound-button {
-      position: absolute;
-      right: 10px;
-      bottom: 7px;
-      border: 1px solid rgba(255, 255, 255, .25);
-      border-radius: 999px;
-      padding: .65rem .9rem;
-      color: rgba(255, 255, 255, .8);
-      background: rgba(0, 0, 0, .45);
-      font: 600 .75rem/1 system-ui, sans-serif;
-      letter-spacing: .04em;
-      cursor: pointer;
-      opacity: .7;
-      transition: opacity .2s, background .2s, color .2s;
-    }
-    .sound-button:hover, .sound-button:focus-visible { opacity: 1; background: rgba(20, 35, 55, .7); }
     @keyframes window-flicker { 0%, 96%, 100% { filter: none; } 97% { filter: contrast(1.16) brightness(1.1); } 98% { filter: hue-rotate(18deg); } }
+    @media (min-width: 561px) and (max-width: 900px) {
+      .lost-window { width: 92vw; height: 84dvh; }
+    }
     @media (max-width: 560px) {
-      body { padding: 2vh 2vw; }
-      .lost-window { width: 94vw; height: 88vh; min-height: 340px; grid-template-rows: 36px 30px 1fr 28px; }
+      body { padding: 2dvh 2vw; }
+      .lost-window { width: 96vw; height: 92dvh; min-height: 320px; grid-template-rows: 36px 30px 1fr 28px; }
+      .window-title span:last-child { max-width: 58vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .tab { min-width: 0; width: 100%; }
       .window-controls { display: none; }
+      .status-bar { font-size: 8px; }
     }
   </style>
 </head>
@@ -116,7 +105,6 @@
     </nav>
     <section class="canvas-frame">
       <canvas id="heart" aria-label="A glowing heart made from the words I love you"></canvas>
-      <button class="sound-button" id="sound" type="button" aria-label="Enable music">Enable music</button>
     </section>
     <footer class="status-bar"><span class="status-error">FILE STATUS: UNSTABLE</span><span>0xILOVEYOU // LOST</span></footer>
   </main>
@@ -125,7 +113,6 @@
     const canvas = document.getElementById('heart');
     const context = canvas.getContext('2d');
     const music = document.getElementById('music');
-    const soundButton = document.getElementById('sound');
     const words = ['love you'];
     const colors = ['#173b8f', '#1e5eff', '#008cff', '#35c7ff', '#5f7dff', '#86e8ff', '#0b2d68'];
     const redColors = ['#8f1028', '#c4143d', '#ed174d', '#ff315e', '#ff5875', '#ff8294', '#700b20'];
@@ -430,15 +417,11 @@
       if (audioContext && audioContext.state === 'suspended') audioContext.resume();
       music.play().then(() => {
         autoplayStarted = true;
-        soundButton.textContent = 'Music on';
-      }).catch(() => {
-        soundButton.textContent = 'Tap for music';
-      });
+      }).catch(() => {});
     }
 
-    soundButton.addEventListener('click', () => {
-      startMusic();
-    });
+    document.addEventListener('pointerdown', startMusic, { once: true });
+    document.addEventListener('keydown', startMusic, { once: true });
     window.addEventListener('resize', () => { resize(); buildParticles(); });
     resize();
     buildParticles();
