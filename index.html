@@ -147,6 +147,7 @@
     let beatDropActivated = false;
     let colorMode = 'blue';
     let lastColorPhase = -1;
+    let uiScale = 1;
 
     function resize() {
       const density = Math.min(window.devicePixelRatio || 1, 2);
@@ -158,7 +159,8 @@
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       context.setTransform(density, 0, 0, density, 0, 0);
-      scale = Math.min(width / 2000, height / 1200) * 20;
+      uiScale = Math.min(1, width / 780, height / 640);
+      scale = Math.min(width / 32, height / 26) * .84;
     }
 
     function screenPoint(point, radius = 1) {
@@ -184,7 +186,7 @@
       const outlinePoints = [];
       for (let index = 0; index < 160; index += 1) {
         const point = screenPoint(heartPoint(index / 160 * Math.PI * 2));
-        if (outlinePoints.every((placed) => Math.hypot(point.x - placed.x, point.y - placed.y) >= 30)) {
+        if (outlinePoints.every((placed) => Math.hypot(point.x - placed.x, point.y - placed.y) >= 30 * Math.max(.5, uiScale))) {
           outlinePoints.push(point);
           addParticle(point, 'outline', index);
         }
@@ -195,7 +197,7 @@
       while (fillPoints.length < 130 && attempts < 10400) {
         attempts += 1;
         const point = screenPoint(heartPoint(random(0, Math.PI * 2)), random(0, .86));
-        if (fillPoints.every((placed) => Math.hypot(point.x - placed.x, point.y - placed.y) >= 46)) {
+        if (fillPoints.every((placed) => Math.hypot(point.x - placed.x, point.y - placed.y) >= 46 * Math.max(.5, uiScale))) {
           fillPoints.push(point);
           addParticle(point, 'fill', Math.floor(random(0, 321)));
         }
@@ -215,8 +217,8 @@
       const alpha = particle.alpha * flicker / 255;
       if (alpha <= 0) return;
       const pulse = 1 + .16 * Math.sin(frame * .11 + particle.flicker);
-      const size = (particle.kind === 'outline' ? 20 : 17) * particle.size * pulse * (1 + beatIntensity * .22);
-      const shake = particle.alpha >= 255 ? random(-1.4 - beatIntensity * 8, 1.4 + beatIntensity * 8) : 0;
+      const size = (particle.kind === 'outline' ? 20 : 17) * particle.size * pulse * (1 + beatIntensity * .22) * uiScale;
+      const shake = particle.alpha >= 255 ? random(-1.4 - beatIntensity * 8, 1.4 + beatIntensity * 8) * uiScale : 0;
       const colorPalette = colorMode === 'red' ? redColors : colors;
       const color = colorPalette[particle.colorIndex];
       context.save();
@@ -225,7 +227,7 @@
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       context.shadowColor = color;
-      context.shadowBlur = size * 1.9;
+      context.shadowBlur = size * (1.9 + beatIntensity * .8);
       context.fillStyle = color;
       context.fillText(particle.word, particle.x + shake, particle.y + shake);
       context.globalAlpha = alpha;
@@ -260,7 +262,7 @@
       const glitchText = inWhitePulseWindow && (Math.random() < .24 || beatIntensity > .85);
       context.save();
       context.globalAlpha = inWhitePulseWindow ? .28 + .35 * pulseWave : alpha / 5;
-      context.font = `700 ${42 * pulse}px Georgia`;
+      context.font = `700 ${42 * pulse * uiScale}px Georgia`;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       context.shadowColor = '#fffaf5';
@@ -270,9 +272,9 @@
         context.globalCompositeOperation = 'screen';
         context.globalAlpha = .5;
         context.fillStyle = '#ff174f';
-        context.fillText(` ${message} `, width / 2 + random(-12, 12), height / 2 + random(-3, 3));
+        context.fillText(` ${message} `, width / 2 + random(-12, 12) * uiScale, height / 2 + random(-3, 3) * uiScale);
         context.fillStyle = '#29b6ff';
-        context.fillText(` ${message} `, width / 2 + random(-12, 12), height / 2 + random(-3, 3));
+        context.fillText(` ${message} `, width / 2 + random(-12, 12) * uiScale, height / 2 + random(-3, 3) * uiScale);
         context.globalCompositeOperation = 'source-over';
         context.globalAlpha = inWhitePulseWindow ? .28 + .35 * pulseWave : alpha / 5;
         context.fillStyle = '#fffaf5';
@@ -356,7 +358,7 @@
         const x = random(0, width * .82);
         context.beginPath();
         context.moveTo(x, y);
-        context.lineTo(Math.min(width, x + random(20, 180) * beatIntensity), y + random(-4, 4));
+        context.lineTo(Math.min(width, x + random(20, 180) * beatIntensity * uiScale), y + random(-4, 4) * uiScale);
         context.stroke();
       }
       context.restore();
@@ -370,17 +372,17 @@
       context.globalAlpha = corruption * .7;
       for (let index = 0; index < 9 + Math.floor(corruption * 12); index += 1) {
         const y = random(0, height);
-        const sliceHeight = random(1, 8 + corruption * 14);
+        const sliceHeight = random(1, 8 + corruption * 14) * uiScale;
         const x = random(-width * .1, width * .8);
         const sliceWidth = random(width * .05, width * .55);
         context.fillStyle = index % 2 ? '#ff174f' : '#29b6ff';
-        context.fillRect(x + random(-18, 18) * corruption, y, sliceWidth, sliceHeight);
+        context.fillRect(x + random(-18, 18) * corruption * uiScale, y, sliceWidth, sliceHeight);
       }
       context.globalCompositeOperation = 'source-over';
       context.globalAlpha = corruption * .5;
       context.fillStyle = '#020208';
       for (let index = 0; index < 4 + Math.floor(corruption * 5); index += 1) {
-        context.fillRect(0, random(0, height), width * random(.15, .8), random(1, 5 + corruption * 8));
+        context.fillRect(0, random(0, height), width * random(.15, .8), random(1, 5 + corruption * 8) * uiScale);
       }
       context.globalAlpha = corruption * .16;
       context.fillStyle = '#ffffff';
@@ -393,7 +395,7 @@
       updateBeat();
       context.clearRect(0, 0, width, height);
       const flashCycle = Math.sin(frame * .12) ** 16;
-      const shakeAmount = beatIntensity * 14 + flashCycle * 3;
+      const shakeAmount = (beatIntensity * 14 + flashCycle * 3) * uiScale;
       context.save();
       context.translate(random(-shakeAmount, shakeAmount), random(-shakeAmount, shakeAmount));
       if (flashCycle > .02 || beatIntensity > .08) {
@@ -422,7 +424,14 @@
 
     document.addEventListener('pointerdown', startMusic, { once: true });
     document.addEventListener('keydown', startMusic, { once: true });
-    window.addEventListener('resize', () => { resize(); buildParticles(); });
+    function rebuildForSize() {
+      resize();
+      buildParticles();
+    }
+    window.addEventListener('resize', rebuildForSize);
+    if (window.ResizeObserver) {
+      new ResizeObserver(rebuildForSize).observe(canvas.parentElement);
+    }
     resize();
     buildParticles();
     animate();
